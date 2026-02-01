@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import authRouter from "./routes/auth.route";
+import workFlowRoute from "./routes/workflow.routes";
 
 const app = express();
 
@@ -62,8 +63,12 @@ app.get("/", async (_req: Request, res: Response) => {
 // auth router 
 
 
-app.use("/api/v1",authRouter);
+app.use("/api/v1/auth",authRouter);
 
+// workflow route 
+
+
+app.use("/api/v1",workFlowRoute);
 
 
 
