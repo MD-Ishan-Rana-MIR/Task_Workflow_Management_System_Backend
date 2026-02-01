@@ -3,6 +3,7 @@ import cors from "cors";
 
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import authRouter from "./routes/auth.route";
 
 const app = express();
 
@@ -56,6 +57,12 @@ app.get("/", async (_req: Request, res: Response) => {
 
 
 // router 
+
+
+// auth router 
+
+
+app.use("/api/v1",authRouter);
 
 
 
