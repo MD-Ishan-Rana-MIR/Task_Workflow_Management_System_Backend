@@ -126,59 +126,53 @@ export const createTask = async (req: Request, res: Response) => {
   try {
     const { title, project, workflow, assignedUsers, priority, dueDate } = req.body;
 
-    // 1️⃣ Find workflow
     const wf = await Workflow.findById(workflow);
     if (!wf) return res.status(404).json({ message: "Workflow not found" });
 
-    // 2️⃣ Sort stages and ensure workflow has at least one stage
     const stages: IStage[] = wf.stages.sort((a, b) => a.order - b.order);
     if (!stages.length) {
       return res.status(400).json({ message: "Workflow has no stages" });
     }
 
-    // 3️⃣ TS now knows firstStage exists, do NOT annotate with | undefined
     const firstStage = stages[0];
 
-    // 4️⃣ Convert assignedUsers to ObjectId[]
     const assignedUserIds: Types.ObjectId[] = (assignedUsers || []).map(
       (id: string) => new Types.ObjectId(id)
     );
 
-    // 5️⃣ Get userId from headers and convert to ObjectId
     const userIdHeader = req.headers.id;
 
-if (!userIdHeader) {
-  return res.status(400).json({ message: "User ID missing in headers" });
-}
+    if (!userIdHeader) {
+      return res.status(400).json({ message: "User ID missing in headers" });
+    }
 
-// Express headers can be string or string[]
-const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
+    const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
 
 
-    // 6️⃣ Create the task
-   let task;
-    if(firstStage){
-        task = await TaskModel.create({
-      title,
-      project: new Types.ObjectId(project),
-      workflow: new Types.ObjectId(workflow),
-      priority: priority || "MEDIUM",
-      assignedUsers: assignedUserIds,
-      dueDate: new Date(dueDate),
-      currentStage: {
-        stageId: firstStage._id,
-        stageName: firstStage.name,
-        order: firstStage.order
-      },
-      activityLog: [
-        {
-          action: "TASK_CREATED",
-          toStage: firstStage.name,
-          user: userId,
-          createdAt: new Date()
-        }
-      ]
-    });
+
+    let task;
+    if (firstStage) {
+      task = await TaskModel.create({
+        title,
+        project: new Types.ObjectId(project),
+        workflow: new Types.ObjectId(workflow),
+        priority: priority || "MEDIUM",
+        assignedUsers: assignedUserIds,
+        dueDate: new Date(dueDate),
+        currentStage: {
+          stageId: firstStage._id,
+          stageName: firstStage.name,
+          order: firstStage.order
+        },
+        activityLog: [
+          {
+            action: "TASK_CREATED",
+            toStage: firstStage.name,
+            user: userId,
+            createdAt: new Date()
+          }
+        ]
+      });
     }
 
     return res.status(201).json(task);
@@ -188,16 +182,21 @@ const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
   }
 };
 
+
+
+
+
+
 export const changeTaskStage = async (req: Request, res: Response) => {
   const { nextStageId } = req.body;
-      const userIdHeader = req.headers.id;
+  const userIdHeader = req.headers.id;
 
-if (!userIdHeader) {
-  return res.status(400).json({ message: "User ID missing in headers" });
-}
+  if (!userIdHeader) {
+    return res.status(400).json({ message: "User ID missing in headers" });
+  }
 
-// Express headers can be string or string[]
-const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
+  // Express headers can be string or string[]
+  const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
 
   const task = await TaskModel.findById(req.params.id);
   if (!task) return res.status(404).json({ message: "Task not found" });
@@ -239,25 +238,25 @@ const userId = Array.isArray(userIdHeader) ? userIdHeader[0] : userIdHeader;
 
   // 🔔 Automation
 
-if (nextStage.name === "Done") {
-  task.completedAt = new Date();
+  if (nextStage.name === "Done") {
+    task.completedAt = new Date();
 
-  if (task.assignedUsers && task.assignedUsers.length > 0) {
-    // Convert all users to ObjectId
-    const users: Types.ObjectId[] = task.assignedUsers.map(user =>
-      user instanceof Types.ObjectId ? user : new Types.ObjectId(user)
-    );
+    if (task.assignedUsers && task.assignedUsers.length > 0) {
+      // Convert all users to ObjectId
+      const users: Types.ObjectId[] = task.assignedUsers.map(user =>
+        user instanceof Types.ObjectId ? user : new Types.ObjectId(user)
+      );
 
-    await Notification.insertMany(
-      users.map(userId => ({
-        user: userId,
-        task: task._id,
-        message: `Task "${task.title}" completed`,
-        createdAt: new Date() // optional
-      }))
-    );
+      await Notification.insertMany(
+        users.map(userId => ({
+          user: userId,
+          task: task._id,
+          message: `Task "${task.title}" completed`,
+          createdAt: new Date() // optional
+        }))
+      );
+    }
   }
-}
 
 
   await task.save();
@@ -265,11 +264,14 @@ if (nextStage.name === "Done") {
 };
 
 
-export const allTask = async (req:Request,res:Response)=>{
+
+
+
+export const allTask = async (req: Request, res: Response) => {
   try {
-    const data = await TaskModel.find().sort({createdAt:-1});
-    return successResponse(res,200,"Task find successfully",data);
+    const data = await TaskModel.find().sort({ createdAt: -1 });
+    return successResponse(res, 200, "Task find successfully", data);
   } catch (error) {
-    return errorResponse(res,500,"Something went worng",error);
+    return errorResponse(res, 500, "Something went worng", error);
   }
 }

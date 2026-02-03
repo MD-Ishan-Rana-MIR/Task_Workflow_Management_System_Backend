@@ -3,10 +3,16 @@ import { Workflow } from "../models/workflow.model";
 import { errorResponse, successResponse } from "../utils/response";
 
 export const createWorkflow = async (req: Request, res: Response) => {
-  const { name, stages } = req.body;
+
+  const { name, stages, projectId } = req.body;
+
+  console.log(projectId)
+
+  console.log("role is", req.headers.role);
 
   try {
     const workflow = await Workflow.create({
+      projectId,
       name,
       stages: stages.map((s: any, i: number) => ({
         name: s.name,
@@ -17,6 +23,7 @@ export const createWorkflow = async (req: Request, res: Response) => {
 
     return successResponse(res, 201, "Workflow create successfully", workflow);
   } catch (error) {
+    console.log("error is", error)
     return errorResponse(res, 500, "Something went wrong", error)
   }
 };

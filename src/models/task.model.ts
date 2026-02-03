@@ -84,7 +84,7 @@ const TaskSchema = new Schema<Task>(
     },
     assignedUsers: [
       {
-        type: Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
       }
     ],
@@ -101,7 +101,7 @@ const TaskSchema = new Schema<Task>(
     }
   },
   {
-    timestamps: { createdAt: true, updatedAt: false }
+    timestamps: true, versionKey: false
   }
 );
 

@@ -4,13 +4,13 @@ import projectModel from "../models/project.model";
 // 1️⃣ Create Project
 export const createProject = async (req: Request, res: Response) => {
   try {
-    const { name, description, workflowId, members } = req.body;
+    const { name, description, members } = req.body;
 
-    if (!name || !workflowId) {
-      return res.status(400).json({ message: "Name & Workflow required" });
+    if (!name) {
+      return res.status(400).json({ message: "Name required" });
     }
 
-    const project = await projectModel.create({ name, description, workflowId, members });
+    const project = await projectModel.create({ name, description, members });
     res.status(201).json(project);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
@@ -20,7 +20,7 @@ export const createProject = async (req: Request, res: Response) => {
 // 2️⃣ Get all Projects
 export const getProjects = async (req: Request, res: Response) => {
   try {
-    const projects = await projectModel.find().populate("workflowId").populate("members", "name email");
+    const projects = await projectModel.find();
     res.json(projects);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });
@@ -52,7 +52,7 @@ export const updateProject = async (req: Request, res: Response) => {
 
     project.name = name || project.name;
     project.description = description || project.description;
-    project.workflowId = workflowId || project.workflowId;
+    // project.workflowId = workflowId || project.workflowId;
     project.members = members || project.members;
 
     await project.save();
@@ -68,7 +68,7 @@ export const deleteProject = async (req: Request, res: Response) => {
     const project = await projectModel.findById(req.params.id);
     if (!project) return res.status(404).json({ message: "Project not found" });
 
-    await project.deleteOne({_id:req.params.id});
+    await project.deleteOne({ _id: req.params.id });
     res.json({ message: "Project deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err });

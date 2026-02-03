@@ -73,7 +73,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const allUser = async (req: Request, res: Response) => {
     try {
-        const data = await User.find();
+        const data = await User.find().select("_id name");
         return successResponse(res, 200, "User find successfully", data);
     } catch (error) {
         return errorResponse(res, 500, "Something went wrong", error);
