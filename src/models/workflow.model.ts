@@ -1,6 +1,8 @@
 import { Schema, model, Document, Types } from "mongoose";
 
 export interface IStage {
+    _id: Types.ObjectId;
+
   name: string;
   order: number;
 }
@@ -18,6 +20,7 @@ const workflowSchema = new Schema<IWorkflow>(
     name: String,
     stages: [
       {
+        _id : Types.ObjectId,
         name: String,
         order: Number
       }

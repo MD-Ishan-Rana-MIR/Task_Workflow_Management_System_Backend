@@ -1,12 +1,23 @@
 import express, { Request, Response } from "express";
-import cors from "cors";
+import  cors from "cors" // causes overload issue
 
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import authRouter from "./routes/auth.route";
 import workFlowRoute from "./routes/workflow.routes";
+import taskRoute from "./routes/task.route";
+import projectRouter from "./routes/project.route";
 
 const app = express();
+
+
+const corsOptions: cors.CorsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+}
+
+app.use(cors(corsOptions))
 
 
 
@@ -18,13 +29,6 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    credentials: true,
-  })
-);
 
 
 app.use(morgan("dev"));
@@ -62,13 +66,20 @@ app.get("/", async (_req: Request, res: Response) => {
 
 // auth router 
 
-
 app.use("/api/v1/auth",authRouter);
 
 // workflow route 
 
-
 app.use("/api/v1",workFlowRoute);
+
+// task router 
+
+app.use("/api/v1",taskRoute);
+
+
+// project route 
+
+app.use("/api/v1",projectRouter);
 
 
 

@@ -1,50 +1,108 @@
-import { Schema, model, Document, Types } from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
-export type Priority = "Low" | "Medium" | "High";
+export type Priority = "LOW" | "MEDIUM" | "HIGH";
 
-export interface IActivityLog {
+export interface CurrentStage {
+  stageId: Types.ObjectId;
+  stageName: string;
+  order: number;
+}
+
+export interface ActivityLog {
   action: string;
-  from?: string;
-  to?: string;
-  userId: Types.ObjectId;
-  timestamp: Date;
-}
-
-export interface ITask extends Document {
-  title: string;
-  description?: string;
-  priority: Priority;
-  workflowId: Types.ObjectId;
-  currentStage: string;
-  assignedUsers: Types.ObjectId[];
-  dueDate?: Date;
-  completedAt?: Date;
-  activityLog: IActivityLog[];
+  fromStage?: string;
+  toStage?: string;
+  user: Types.ObjectId;
   createdAt: Date;
-  updatedAt: Date;
 }
 
-const taskSchema = new Schema<ITask>(
+export interface Task extends Document {
+  _id: Types.ObjectId;
+  title: string;
+  description: string; // markdown
+  priority: Priority;
+  project: Types.ObjectId;
+  workflow: Types.ObjectId;
+  currentStage: CurrentStage;
+  assignedUsers: Types.ObjectId[];
+  dueDate: Date;
+  completedAt?: Date;
+  activityLog: ActivityLog[];
+  createdAt: Date;
+}
+import { Schema, model, } from "mongoose";
+
+const ActivityLogSchema = new Schema(
   {
-    title: String,
-    description: String,
-    priority: { type: String, enum: ["Low", "Medium", "High"] },
-    workflowId: { type: Schema.Types.ObjectId, ref: "Workflow" },
-    currentStage: String,
-    assignedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    dueDate: Date,
-    completedAt: Date,
-    activityLog: [
-      {
-        action: String,
-        from: String,
-        to: String,
-        userId: Schema.Types.ObjectId,
-        timestamp: Date
-      }
-    ]
+    action: { type: String, required: true },
+    fromStage: { type: String },
+    toStage: { type: String },
+    user: { type: Types.ObjectId, ref: "User", required: true },
+    createdAt: { type: Date, default: Date.now }
   },
-  { timestamps: true,versionKey:false }
+  { _id: false }
 );
 
-export const Task = model<ITask>("Task", taskSchema);
+const CurrentStageSchema = new Schema(
+  {
+    stageId: { type: Types.ObjectId, required: true },
+    stageName: { type: String, required: true },
+    order: { type: Number, required: true }
+  },
+  { _id: false }
+);
+
+const TaskSchema = new Schema<Task>(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    priority: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH"],
+      default: "MEDIUM"
+    },
+    project: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Project",
+      required: true
+    },
+    workflow: {
+      type: Types.ObjectId,
+      ref: "Workflow",
+      required: true
+    },
+    currentStage: {
+      type: CurrentStageSchema,
+      required: true
+    },
+    assignedUsers: [
+      {
+        type: Types.ObjectId,
+        ref: "User"
+      }
+    ],
+    dueDate: {
+      type: Date,
+      required: true
+    },
+    completedAt: {
+      type: Date
+    },
+    activityLog: {
+      type: [ActivityLogSchema],
+      default: []
+    }
+  },
+  {
+    timestamps: { createdAt: true, updatedAt: false }
+  }
+);
+
+export const TaskModel = model("Task", TaskSchema);
